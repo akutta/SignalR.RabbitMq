@@ -77,35 +77,32 @@ namespace SignalR.RabbitMQ
             {
                 return;
             }
-            _rabbitConnectionBase.StartListening();
-            Open(0);
-
-            Task.Factory.StartNew( async () =>
+            _rabbitConnectionBase.StartListening().ContinueWith(async task =>
             {
-	            while (true)
-	            {
-		            foreach (var message in Sendingbuffer.GetConsumingEnumerable())
-		            {
-			            try
-			            {
-				            await _rabbitConnectionBase.Send(message);
-				            if (message.Tcs != null)
-				            {
-					            message.Tcs.TrySetResult(null);
-				            }
-			            }
-			            catch (Exception ex)
-			            {
-				            OnConnectionLost();
-				            if (message.Tcs != null)
-				            {
-					            message.Tcs.TrySetException(ex);
-				            }
-			            }
-		            }
-	            }
+                Open(0);
+                while (true)
+                {
+                    foreach (var message in Sendingbuffer.GetConsumingEnumerable())
+                    {
+                        try
+                        {
+                            await _rabbitConnectionBase.Send(message);
+                            if (message.Tcs != null)
+                            {
+                                message.Tcs.TrySetResult(null);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            OnConnectionLost();
+                            if (message.Tcs != null)
+                            {
+                                message.Tcs.TrySetException(ex);
+                            }
+                        }
+                    }
+                }
             });
-
         }
         
         protected override Task Send(IList<Message> messages)
