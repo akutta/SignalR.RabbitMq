@@ -24,9 +24,7 @@ namespace SignalR.RabbitMQ
         }
 
         public ulong Id { get; set; }
-
-        public TaskCompletionSource<object> Tcs { get; set; }
-
+        
         public byte[] Bytes { get; set; }
 
         public ScaleoutMessage ScaleoutMessage 

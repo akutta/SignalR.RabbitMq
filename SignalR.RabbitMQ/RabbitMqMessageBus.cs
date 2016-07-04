@@ -11,9 +11,7 @@ namespace SignalR.RabbitMQ
     internal class RabbitMqMessageBus : ScaleoutMessageBus
     {
         private readonly RabbitConnectionBase _rabbitConnectionBase;
-
-	    private static readonly BlockingCollection<RabbitMqMessageWrapper> Sendingbuffer
-                = new BlockingCollection<RabbitMqMessageWrapper>(new ConcurrentQueue<RabbitMqMessageWrapper>());
+        
         private static readonly BlockingCollection<RabbitMqMessageWrapper> Receivingbuffer
                 = new BlockingCollection<RabbitMqMessageWrapper>(new ConcurrentQueue<RabbitMqMessageWrapper>());
 
@@ -77,48 +75,14 @@ namespace SignalR.RabbitMQ
             {
                 return;
             }
-            _rabbitConnectionBase.StartListening().ContinueWith(async task =>
-            {
-                Open(0);
-                while (true)
-                {
-                    await ProcessOutgoingMessages();
-                }
-            });
+            Open(0);
+            _rabbitConnectionBase.StartListening();
         }
 
-        protected override Task Send(IList<Message> messages)
+        protected override async Task Send(IList<Message> messages)
         {
-            var buffer = new RabbitMqMessageWrapper(messages)
-            {
-                Tcs = new TaskCompletionSource<object>()
-            };
-            Sendingbuffer.Add(buffer);
-            return buffer.Tcs.Task;
+            var buffer = new RabbitMqMessageWrapper(messages);
+            await _rabbitConnectionBase.Send(buffer);
         }
-
-        private async Task ProcessOutgoingMessages()
-        {
-            foreach (var message in Sendingbuffer.GetConsumingEnumerable())
-            {
-                try
-                {
-                    await _rabbitConnectionBase.Send(message);
-                    if (message.Tcs != null)
-                    {
-                        message.Tcs.TrySetResult(null);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    OnConnectionLost();
-                    if (message.Tcs != null)
-                    {
-                        message.Tcs.TrySetException(ex);
-                    }
-                }
-            }
-        }
-
     }
 }
