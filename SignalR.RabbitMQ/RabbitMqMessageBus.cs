@@ -82,29 +82,11 @@ namespace SignalR.RabbitMQ
                 Open(0);
                 while (true)
                 {
-                    foreach (var message in Sendingbuffer.GetConsumingEnumerable())
-                    {
-                        try
-                        {
-                            await _rabbitConnectionBase.Send(message);
-                            if (message.Tcs != null)
-                            {
-                                message.Tcs.TrySetResult(null);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            OnConnectionLost();
-                            if (message.Tcs != null)
-                            {
-                                message.Tcs.TrySetException(ex);
-                            }
-                        }
-                    }
+                    await ProcessOutgoingMessages();
                 }
             });
         }
-        
+
         protected override Task Send(IList<Message> messages)
         {
             var buffer = new RabbitMqMessageWrapper(messages)
@@ -114,5 +96,29 @@ namespace SignalR.RabbitMQ
             Sendingbuffer.Add(buffer);
             return buffer.Tcs.Task;
         }
+
+        private async Task ProcessOutgoingMessages()
+        {
+            foreach (var message in Sendingbuffer.GetConsumingEnumerable())
+            {
+                try
+                {
+                    await _rabbitConnectionBase.Send(message);
+                    if (message.Tcs != null)
+                    {
+                        message.Tcs.TrySetResult(null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnConnectionLost();
+                    if (message.Tcs != null)
+                    {
+                        message.Tcs.TrySetException(ex);
+                    }
+                }
+            }
+        }
+
     }
 }
