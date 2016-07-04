@@ -80,7 +80,7 @@ namespace SignalR.RabbitMQ
             _rabbitConnectionBase.StartListening();
             Open(0);
 
-            Task.Factory.StartNew(() =>
+            Task.Factory.StartNew( async () =>
             {
 	            while (true)
 	            {
@@ -88,7 +88,7 @@ namespace SignalR.RabbitMQ
 		            {
 			            try
 			            {
-				            _rabbitConnectionBase.Send(message);
+				            await _rabbitConnectionBase.Send(message);
 				            if (message.Tcs != null)
 				            {
 					            message.Tcs.TrySetResult(null);
