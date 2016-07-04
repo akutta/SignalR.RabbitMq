@@ -33,16 +33,16 @@ namespace SignalR.RabbitMQ
             await _bus.PublishAsync(_stampExchange, string.Empty, false, false, messageToSend);
         }
 
-        public override void StartListening()
+        public override async Task StartListening()
         {
-            _receiveexchange = _bus.ExchangeDeclare(Configuration.ExchangeName, ExchangeType.Fanout);
-            _stampExchange = _bus.ExchangeDeclare(Configuration.StampExchangeName, "x-stamp");
+            _receiveexchange = await _bus.ExchangeDeclareAsync(Configuration.ExchangeName, ExchangeType.Fanout);
+            _stampExchange = await _bus.ExchangeDeclareAsync(Configuration.StampExchangeName, "x-stamp");
 
             _queue = Configuration.QueueName == null
                         ? _bus.QueueDeclare()
-                        : _bus.QueueDeclare(Configuration.QueueName);
+                        : await _bus.QueueDeclareAsync(Configuration.QueueName);
             
-            _bus.Bind( _receiveexchange, _queue, "#");
+            await _bus.BindAsync( _receiveexchange, _queue, "#");
             _bus.Consume<byte[]>(_queue,
                 (msg, messageReceivedInfo) =>
                     {

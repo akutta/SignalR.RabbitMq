@@ -30,7 +30,7 @@ namespace SignalR.RabbitMQ
             throw new NotImplementedException("Implement the Send method in your Rabbit connection class.");
         }
 
-        public virtual void StartListening()
+        public virtual Task StartListening()
         {
             throw new NotImplementedException("Implement the StartListening method in your Rabbit connection class.");
         }
