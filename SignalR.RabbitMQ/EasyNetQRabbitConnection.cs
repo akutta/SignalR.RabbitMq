@@ -26,11 +26,11 @@ namespace SignalR.RabbitMQ
             _bus.Disconnected += OnDisconnection;
         }
 
-        public override void Send(RabbitMqMessageWrapper message)
+        public override async Task Send(RabbitMqMessageWrapper message)
         {
             var messageToSend = new Message<byte[]>(message.Bytes);
             messageToSend.Properties.Headers.Add("forward_exchange", Configuration.ExchangeName);
-            _bus.Publish(_stampExchange, string.Empty, false, false, messageToSend);
+            await _bus.PublishAsync(_stampExchange, string.Empty, false, false, messageToSend);
         }
 
         public override void StartListening()

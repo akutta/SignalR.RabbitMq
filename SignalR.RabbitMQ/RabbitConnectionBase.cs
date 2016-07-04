@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace SignalR.RabbitMQ
 {
@@ -24,7 +25,7 @@ namespace SignalR.RabbitMQ
             // do nothing?
         }
 
-        public virtual void Send(RabbitMqMessageWrapper message)
+        public virtual Task Send(RabbitMqMessageWrapper message)
         {
             throw new NotImplementedException("Implement the Send method in your Rabbit connection class.");
         }
